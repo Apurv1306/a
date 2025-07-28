@@ -1,0 +1,12 @@
+flask==2.3.2
+kivy==2.3.0
+kivymd==1.1.1
+requests==2.31.0
+opencv-python==4.9.0.80
+pandas==2.2.2
+fpdf==1.7.2
+apscheduler==3.10.4
+pygame==2.5.2
+edge-tts==6.1.8
+numpy==1.26.4
+android_webview==0.1.0
