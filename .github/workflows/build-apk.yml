@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Python 3.10
+      - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
@@ -22,40 +22,53 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y \
-            libgl1-mesa-dev \
-            libgles2-mesa-dev \
+            build-essential \
+            ccache \
+            git \
+            zip \
             unzip \
             openjdk-17-jdk \
             python3-pip \
-            git \
             pkg-config \
             libffi-dev \
             libssl-dev \
             autoconf \
             automake \
             libtool \
-            zlib1g-dev
-              
-      - name: Upgrade pip and setup virtualenv
+            zlib1g-dev \
+            libncurses5-dev \
+            libncursesw5-dev \
+            libtinfo-dev
+
+      - name: Upgrade pip and install Cython
         run: |
           pip install --upgrade pip virtualenv
+          pip install --upgrade Cython==0.29.33
 
-      - name: Install Buildozer and Kivy dependencies
+      - name: Install Buildozer, Kivy, garden CLI and project requirements
+        env:
+          PIP_BREAK_SYSTEM_PACKAGES: "0"
         run: |
           pip install kivy==2.3.0 buildozer==1.5.0 requests==2.31.0
+          pip install kivy-garden
           pip install -r requirements.txt
 
-      - name: Fix Kivy Garden 'garden' permissions
-        run: |
-          chmod +x $(which garden)
+      - name: Ensure ~/.local/bin is on PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Install 'android_webview' Kivy Garden package
+      - name: Fix garden CLI permissions
         run: |
-          garden install android_webview
+          if [ -f "$HOME/.local/bin/garden" ]; then
+            chmod +x "$HOME/.local/bin/garden"
+          fi
+
+      - name: Install Android WebView garden package
+        run: |
+          ~/.local/bin/garden install android_webview --app
 
       - name: Build the APK with Buildozer
         run: |
-          buildozer android debug
+          buildozer --verbose android debug
 
       - name: Upload built APK artifact
         uses: actions/upload-artifact@v4
