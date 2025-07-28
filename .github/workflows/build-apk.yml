@@ -3,32 +3,61 @@ name: Build FaceApp APK
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
 
-      - name: Setup Python
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python 3.10
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           sudo apt update
-          sudo apt install -y libgl1-mesa-dev libgles2-mesa-dev unzip openjdk-17-jdk python3-pip
+          sudo apt install -y \
+            libgl1-mesa-dev \
+            libgles2-mesa-dev \
+            unzip \
+            openjdk-17-jdk \
+            python3-pip \
+            git \
+            pkg-config \
+            libffi-dev \
+            libssl-dev \
+            autoconf \
+            automake \
+            libtool \
+            zlib1g-dev
+              
+      - name: Upgrade pip and setup virtualenv
+        run: |
           pip install --upgrade pip virtualenv
-          pip install kivy==2.3.0 buildozer==1.5.0
+
+      - name: Install Buildozer and Kivy dependencies
+        run: |
+          pip install kivy==2.3.0 buildozer==1.5.0 requests==2.31.0
           pip install -r requirements.txt
+
+      - name: Fix Kivy Garden 'garden' permissions
+        run: |
+          chmod +x $(which garden)
+
+      - name: Install 'android_webview' Kivy Garden package
+        run: |
           garden install android_webview
 
-      - name: Build APK with Buildozer
+      - name: Build the APK with Buildozer
         run: |
           buildozer android debug
 
-      - name: Archive APK
+      - name: Upload built APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: faceapp-apk
